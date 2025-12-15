@@ -161,3 +161,50 @@ export interface MLForecastRequest {
     metric: SleepMetricKey;
     forecast_days?: number;
 }
+
+
+/**
+ * Optimization suggestion
+ */
+export interface OptimizationSuggestion {
+    medication: string;
+    doseMg: number;
+    time: string;
+    predictedImpact: number;
+    confidence: number;
+}
+
+/**
+ * Result of Bayesian Optimization
+ */
+export interface OptimizationResult {
+    targetMetric: SleepMetricKey;
+    recommendations: OptimizationSuggestion[];
+    predictedScore: number;
+    confidence: number;
+}
+
+/**
+ * Request for simulation
+ */
+export interface SimulationRequest {
+    medications: Array<{
+        name: string;
+        normalized_name: string;
+        drug_class: string;
+        quantity: number;
+        dosage_mg: number;
+        total_mg: number;
+        time: string;
+    }>;
+    target_metric?: SleepMetricKey;
+}
+
+/**
+ * Result of simulation
+ */
+export interface SimulationResult {
+    predictedValue: number;
+    confidenceInterval: [number, number];
+    percentile: number;
+}

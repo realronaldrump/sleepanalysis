@@ -14,6 +14,9 @@ import {
     MLAnalysisRequest,
     MLForecastRequest,
     MLAlignedDataPoint,
+    OptimizationResult,
+    SimulationRequest,
+    SimulationResult,
 } from '@/types/mlTypes';
 import { AlignedDataPoint } from '@/types/analysis';
 import { ProcessedSleepMetrics, SleepMetricKey } from '@/types/oura';
@@ -304,4 +307,51 @@ export async function runMLAnalysisSafe(
         console.warn('ML analysis failed:', error);
         return null;
     }
+}
+
+
+/**
+ * Get "Next Night" optimization recommendations
+ */
+export async function optimizeNextNight(
+    data: AlignedDataPoint[],
+    targetMetrics?: SleepMetricKey[]
+): Promise<OptimizationResult> {
+    const response = await fetch(`${ML_SERVICE_URL}/analyze/optimize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            aligned_data: convertAlignedData(data),
+            target_metrics: targetMetrics
+        } as MLAnalysisRequest),
+    });
+
+    if (!response.ok) {
+        throw new Error(`ML service error: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return snakeToCamel(result) as OptimizationResult;
+}
+
+/**
+ * Simulate a specific medication configuration
+ */
+export async function simulateConfiguration(
+    medications: SimulationRequest['medications']
+): Promise<SimulationResult> {
+    const response = await fetch(`${ML_SERVICE_URL}/analyze/simulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            medications
+        } as SimulationRequest),
+    });
+
+    if (!response.ok) {
+        throw new Error(`ML service error: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return snakeToCamel(result) as SimulationResult;
 }

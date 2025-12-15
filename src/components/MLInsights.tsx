@@ -13,8 +13,10 @@ import {
     FeatureImportanceResult,
     CausalResult,
     ClusterResult,
+    OptimizationResult,
 } from '@/types/mlTypes';
-import { runMLAnalysisSafe, checkMLServiceHealth } from '@/services/mlClient';
+import { runMLAnalysisSafe, checkMLServiceHealth, optimizeNextNight } from '@/services/mlClient';
+import OptimizationPlayground from './OptimizationPlayground';
 import { AlignedDataPoint } from '@/types/analysis';
 
 interface MLInsightsProps {
@@ -24,10 +26,11 @@ interface MLInsightsProps {
 
 export default function MLInsights({ alignedData, isLoading = false }: MLInsightsProps) {
     const [mlResults, setMLResults] = useState<ComprehensiveMLResult | null>(null);
+    const [optResults, setOptResults] = useState<OptimizationResult | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [mlStatus, setMLStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
     const [error, setError] = useState<string | null>(null);
-    const [activeSection, setActiveSection] = useState<'interactions' | 'importance' | 'causal' | 'clusters'>('interactions');
+    const [activeSection, setActiveSection] = useState<'interactions' | 'importance' | 'causal' | 'clusters' | 'optimize'>('interactions');
 
     // Check ML service availability on mount
     useEffect(() => {
@@ -50,6 +53,14 @@ export default function MLInsights({ alignedData, isLoading = false }: MLInsight
             const results = await runMLAnalysisSafe(alignedData);
             if (results) {
                 setMLResults(results);
+                // Run optimization in parallel or after
+                try {
+                    const opt = await optimizeNextNight(alignedData);
+                    setOptResults(opt);
+                    setActiveSection('optimize'); // Switch to optimization by default on success
+                } catch (e) {
+                    console.warn("Optimization failed", e);
+                }
             } else {
                 setError('ML service unavailable. Please ensure the Python service is running.');
             }
@@ -173,6 +184,7 @@ export default function MLInsights({ alignedData, isLoading = false }: MLInsight
                     { key: 'importance', label: '📊 Importance', count: mlResults.featureImportance.topMedications.length },
                     { key: 'causal', label: '🎯 Causal', count: mlResults.causalResults.filter(c => c.isCausal).length },
                     { key: 'clusters', label: '📦 Clusters', count: mlResults.clusters.clusters.length },
+                    { key: 'optimize', label: '🧪 Next Night', count: optResults?.recommendations.length || 0 },
                 ].map(({ key, label, count }) => (
                     <button
                         key={key}
@@ -200,6 +212,12 @@ export default function MLInsights({ alignedData, isLoading = false }: MLInsight
             )}
             {activeSection === 'clusters' && (
                 <ClustersSection clusters={mlResults.clusters} />
+            )}
+            {activeSection === 'optimize' && optResults && (
+                <OptimizationPlayground
+                    alignedData={alignedData}
+                    recommendations={optResults.recommendations}
+                />
             )}
 
             {/* Re-run button */}

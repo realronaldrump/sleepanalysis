@@ -17,12 +17,18 @@ from models.schemas import (
     ClusterResult,
     ComprehensiveResult,
     HealthResponse,
+    ComprehensiveResult,
+    HealthResponse,
     SleepMetricKey,
+    OptimizationResult,
+    SimulationRequest,
+    SimulationResult,
 )
 from services.interaction_detector import detect_interactions, get_feature_importance
 from services.time_series import forecast_sleep_metric
 from services.clustering import cluster_medication_regimens
 from services.causal_inference import analyze_causal_effects
+from services.optimization import optimizer_instance
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -208,6 +214,54 @@ async def analyze_comprehensive(request: AnalysisRequest):
         
     except Exception as e:
         logger.error(f"Comprehensive analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze/optimize", response_model=OptimizationResult)
+async def analyze_optimize(request: AnalysisRequest):
+    """
+    Generate Bayesian Optimization recommendations for 'Next Night'.
+    """
+    try:
+        logger.info(f"Optimizing for {len(request.aligned_data)} historical points")
+        
+        # Train on the fly for now (optimize later)
+        success = optimizer_instance.train(request.aligned_data, request.target_metrics[0] if request.target_metrics else "sleepScore")
+        
+        if not success:
+            raise HTTPException(status_code=400, detail="Insufficient data for optimization")
+            
+        result = optimizer_instance.optimize_next_night(
+             request.target_metrics[0] if request.target_metrics else "sleepScore"
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Optimization failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze/simulate", response_model=SimulationResult)
+async def analyze_simulate(request: SimulationRequest):
+    """
+    Simulate a specific configuration.
+    Note: Requires model to be trained already (call /analyze/optimize first or ensure persistence).
+    For now, we assume the singleton state is preserved or we might need to pass history again (inefficient).
+    Actually, to be stateless, we should pass history or use a stored model.
+    Given the current architecture, let's assume the frontend calls 'optimize' first which populates the cache.
+    """
+    try:
+        pred, std, percentile = optimizer_instance.simulate_configuration(request.medications)
+        
+        return SimulationResult(
+            predicted_value=round(pred, 1),
+            confidence_interval=(round(pred - 1.96 * std, 1), round(pred + 1.96 * std, 1)),
+            percentile=round(percentile, 2)
+        )
+        
+    except Exception as e:
+        logger.error(f"Simulation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

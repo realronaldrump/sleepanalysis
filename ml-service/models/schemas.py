@@ -177,3 +177,33 @@ class HealthResponse(BaseModel):
     status: str
     version: str
     models_loaded: bool
+
+
+class OptimizationSuggestion(BaseModel):
+    """A single optimization suggestion."""
+    medication: str
+    dose_mg: float
+    time: str  # HH:MM
+    predicted_impact: float
+    confidence: float
+
+
+class OptimizationResult(BaseModel):
+    """Result of Bayesian Optimization."""
+    target_metric: SleepMetricKey
+    recommendations: list[OptimizationSuggestion]
+    predicted_score: float
+    confidence: float
+
+
+class SimulationRequest(BaseModel):
+    """Request to simulate a specific configuration."""
+    medications: list[MedicationData]
+    target_metric: SleepMetricKey = SleepMetricKey.SLEEP_SCORE
+
+
+class SimulationResult(BaseModel):
+    """Result of a simulation."""
+    predicted_value: float
+    confidence_interval: tuple[float, float]
+    percentile: float  # How this compares to history
