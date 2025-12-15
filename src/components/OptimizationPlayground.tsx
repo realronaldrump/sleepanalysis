@@ -96,7 +96,7 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                     quantity: 1,
                     dosage_mg: c.dose,
                     total_mg: c.dose,
-                    time: minutesToTime(c.time)
+                    time: "22:00" // Hardcoded to 10 PM as per request to remove timing variable
                 }));
 
                 const res = await simulateConfiguration(requestMeds);
@@ -136,21 +136,6 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
         setConfigs(newConfigs);
     };
 
-    const minutesToTime = (mins: number) => {
-        const totalMins = mins + 12 * 60;
-        const h = Math.floor(totalMins / 60) % 24;
-        const m = totalMins % 60;
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-    };
-
-    const formatTimeDisplay = (mins: number) => {
-        const totalMins = mins + 12 * 60;
-        const h = Math.floor(totalMins / 60) % 24;
-        const m = totalMins % 60;
-        const ampm = h >= 12 && h < 24 ? 'PM' : 'AM';
-        const h12 = h % 12 || 12;
-        return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
-    };
 
     return (
         <div className="card p-6 bg-[#1a1a1a] border-sky-500/30">
@@ -234,23 +219,6 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                                                     railStyle={{ backgroundColor: '#333' }}
                                                     dotStyle={{ borderColor: '#333', backgroundColor: '#111' }}
                                                     activeDotStyle={{ borderColor: '#0ea5e9', backgroundColor: '#0ea5e9' }}
-                                                />
-                                            </div>
-
-                                            <div className="mt-6">
-                                                <div className="flex justify-between text-xs text-gray-400 mb-2">
-                                                    <span>Time</span>
-                                                    <span className="text-white font-mono">{formatTimeDisplay(config.time)}</span>
-                                                </div>
-                                                <Slider
-                                                    min={360}
-                                                    max={960}
-                                                    step={15}
-                                                    value={config.time}
-                                                    onChange={(val) => handleConfigChange(idx, { time: val as number })}
-                                                    trackStyle={{ backgroundColor: '#a855f7' }}
-                                                    handleStyle={{ borderColor: '#a855f7', backgroundColor: '#000' }}
-                                                    railStyle={{ backgroundColor: '#333' }}
                                                 />
                                             </div>
                                         </div>
