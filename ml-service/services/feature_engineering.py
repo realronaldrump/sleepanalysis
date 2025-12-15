@@ -9,24 +9,7 @@ from typing import Optional
 from models.schemas import AlignedDataPoint, SleepMetricKey
 from datetime import datetime, timedelta
 
-# Biological half-lives in hours
-HALF_LIFE_HOURS = {
-    "caffeine": 5.0,
-    "coffee": 5.0,
-    "espresso": 5.0,
-    "melatonin": 0.8,
-    "magnesium": 24.0,  # Accumulates
-    "ashwagandha": 4.0,
-    "l-theanine": 3.0,
-    "cbd": 24.0,
-    "alcohol": 1.0,     # Zero-order kinetics in reality, but simple decay approx
-    "valerian": 4.0,
-    "benadryl": 9.0,
-    "diphenhydramine": 9.0,
-    "glycine": 4.0,
-    "apigenin": 91.0,   # Very long
-    "zinc": 24.0,
-}
+from services.medication_data import get_medication_half_life
 
 DEFAULT_BEDTIME_HOUR = 22  # 10 PM
 
@@ -81,7 +64,7 @@ def aligned_data_to_dataframe(data: list[AlignedDataPoint]) -> pd.DataFrame:
         
         for med_name, med_data in point.medications.items():
             col_name = _sanitize_col_name(med_name)
-            half_life = HALF_LIFE_HOURS.get(col_name.split("_")[0], 4.0) # Default 4h
+            half_life = get_medication_half_life(med_name)
             
             # Handle list of doses if present, else fallback to single dose
             doses = med_data.get("doses", [])
