@@ -7,7 +7,6 @@ import 'rc-slider/assets/index.css';
 import { AlignedDataPoint } from '@/types/analysis';
 import { simulateConfiguration } from '@/services/mlClient';
 import { SimulationResult, OptimizationSuggestion, PredictionDetail } from '@/types/mlTypes';
-import { SleepMetricKey } from '@/types/oura';
 
 interface OptimizationPlaygroundProps {
     alignedData: AlignedDataPoint[];
@@ -165,8 +164,8 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                         {configs.map((config, idx) => (
                             <div key={config.name} className={`p-4 rounded-lg border transition-all relative group ${config.enabled
-                                    ? 'bg-[#222] border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.1)]'
-                                    : 'bg-[#151515] border-transparent opacity-70'
+                                ? 'bg-[#222] border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.1)]'
+                                : 'bg-[#151515] border-transparent opacity-70'
                                 }`}>
                                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button onClick={() => removeMedication(idx)} className="text-gray-500 hover:text-red-400">×</button>
@@ -247,7 +246,7 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                             <div className="col-span-2 card p-6 bg-[#111] border-gray-800 text-center">
                                 <div className="text-sm text-gray-400 uppercase tracking-widest mb-2">Sleep Score</div>
                                 <MetricDisplay
-                                    detail={result.predictions[SleepMetricKey.SLEEP_SCORE]}
+                                    detail={result.predictions['sleepScore']}
                                     unit=""
                                     scale={1}
                                     goodMin={85}
@@ -258,7 +257,7 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                             <div className="card p-4 bg-[#111] border-gray-800">
                                 <div className="text-xs text-gray-400 mb-1">Deep Sleep</div>
                                 <MetricDisplay
-                                    detail={result.predictions[SleepMetricKey.DEEP_SLEEP_MINUTES]}
+                                    detail={result.predictions['deepSleepMinutes']}
                                     unit=" min"
                                     scale={1}
                                     goodMin={60}
@@ -267,7 +266,7 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                             <div className="card p-4 bg-[#111] border-gray-800">
                                 <div className="text-xs text-gray-400 mb-1">REM Sleep</div>
                                 <MetricDisplay
-                                    detail={result.predictions[SleepMetricKey.REM_SLEEP_MINUTES]}
+                                    detail={result.predictions['remSleepMinutes']}
                                     unit=" min"
                                     scale={1}
                                     goodMin={90}
@@ -278,7 +277,7 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                             <div className="card p-4 bg-[#111] border-gray-800">
                                 <div className="text-xs text-gray-400 mb-1">HRV (Avg)</div>
                                 <MetricDisplay
-                                    detail={result.predictions[SleepMetricKey.AVG_HRV]}
+                                    detail={result.predictions['avgHrv']}
                                     unit=" ms"
                                     scale={1}
                                 />
@@ -286,7 +285,7 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                             <div className="card p-4 bg-[#111] border-gray-800">
                                 <div className="text-xs text-gray-400 mb-1">Latency</div>
                                 <MetricDisplay
-                                    detail={result.predictions[SleepMetricKey.LATENCY_MINUTES]}
+                                    detail={result.predictions['latencyMinutes']}
                                     unit=" min"
                                     scale={1}
                                     goodMin={10} goodMax={20}
