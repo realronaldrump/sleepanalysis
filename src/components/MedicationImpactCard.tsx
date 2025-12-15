@@ -55,10 +55,10 @@ export function MedicationImpactCard({ correlation }: MedicationImpactCardProps)
 
     const getEffectBadge = () => {
         const colors = {
-            large: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-            medium: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-            small: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-            negligible: 'bg-gray-800 text-gray-500 border-gray-700',
+            large: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+            medium: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
+            small: 'bg-neutral-500/20 text-neutral-400 border-neutral-500/30',
+            negligible: 'bg-neutral-800 text-neutral-500 border-neutral-700',
         };
 
         return (
@@ -70,14 +70,14 @@ export function MedicationImpactCard({ correlation }: MedicationImpactCardProps)
 
     const getDrugClassBadge = () => {
         const colors: Record<string, string> = {
-            sleep_aid: 'bg-sleep-deep/20 text-sleep-light',
+            sleep_aid: 'bg-sky-600/20 text-sky-400',
             stimulant: 'bg-orange-500/20 text-orange-400',
             beta_blocker: 'bg-cyan-500/20 text-cyan-400',
-            antipsychotic: 'bg-pink-500/20 text-pink-400',
-            anxiolytic: 'bg-violet-500/20 text-violet-400',
-            antidepressant: 'bg-indigo-500/20 text-indigo-400',
+            antipsychotic: 'bg-amber-500/20 text-amber-400',
+            anxiolytic: 'bg-teal-500/20 text-teal-400',
+            antidepressant: 'bg-blue-500/20 text-blue-400',
             supplement: 'bg-emerald-500/20 text-emerald-400',
-            other: 'bg-gray-500/20 text-gray-400',
+            other: 'bg-neutral-500/20 text-neutral-400',
         };
 
         return (

@@ -9,24 +9,24 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                // Custom color palette for health analytics
+                // Professional system color palette - no purple/pink
                 primary: {
-                    50: '#eef2ff',
-                    100: '#e0e7ff',
-                    200: '#c7d2fe',
-                    300: '#a5b4fc',
-                    400: '#818cf8',
-                    500: '#6366f1',
-                    600: '#4f46e5',
-                    700: '#4338ca',
-                    800: '#3730a3',
-                    900: '#312e81',
-                    950: '#1e1b4b',
+                    50: '#f0f9ff',
+                    100: '#e0f2fe',
+                    200: '#bae6fd',
+                    300: '#7dd3fc',
+                    400: '#38bdf8',
+                    500: '#0ea5e9',
+                    600: '#0284c7',
+                    700: '#0369a1',
+                    800: '#075985',
+                    900: '#0c4a6e',
+                    950: '#082f49',
                 },
                 sleep: {
                     deep: '#1e40af',
                     light: '#60a5fa',
-                    rem: '#c084fc',
+                    rem: '#0ea5e9',  // Changed from purple to sky blue
                     awake: '#f97316',
                 },
                 correlation: {
@@ -39,6 +39,7 @@ module.exports = {
                 'fade-in': 'fadeIn 0.5s ease-out',
                 'slide-up': 'slideUp 0.3s ease-out',
                 'pulse-subtle': 'pulseSubtle 2s ease-in-out infinite',
+                'lift': 'lift 0.2s ease-out forwards',
             },
             keyframes: {
                 fadeIn: {
@@ -52,6 +53,10 @@ module.exports = {
                 pulseSubtle: {
                     '0%, 100%': { opacity: '1' },
                     '50%': { opacity: '0.8' },
+                },
+                lift: {
+                    '0%': { transform: 'translateY(0)' },
+                    '100%': { transform: 'translateY(-2px)' },
                 },
             },
         },

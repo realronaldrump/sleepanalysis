@@ -45,9 +45,9 @@ export function OuraConnect({
     if (isConnected) {
         return (
             <div className="card">
-                <div className="p-4 border-b border-[#222] flex items-center justify-between">
+                <div className="p-4 border-b border-[#262626] flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-sky-600 flex items-center justify-center" style={{ boxShadow: '3px 3px 6px #080808, -3px -3px 6px #1a1a1a' }}>
                             <span className="text-lg">💍</span>
                         </div>
                         <div>

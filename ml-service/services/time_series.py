@@ -9,9 +9,14 @@ from datetime import datetime, timedelta
 from typing import Optional
 import warnings
 
-from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from sklearn.linear_model import LinearRegression
+
+try:
+    from statsmodels.tsa.arima.model import ARIMA
+    from statsmodels.tsa.holtwinters import ExponentialSmoothing
+    HAS_STATSMODELS = True
+except ImportError:
+    HAS_STATSMODELS = False
 
 from models.schemas import (
     SleepMetrics,
@@ -72,6 +77,9 @@ def forecast_sleep_metric(
     
     # Try ARIMA first, fall back to Exponential Smoothing
     try:
+        if not HAS_STATSMODELS:
+            raise ImportError("statsmodels not available")
+
         result = _fit_arima(series, forecast_days)
         model_used = "ARIMA"
     except Exception:

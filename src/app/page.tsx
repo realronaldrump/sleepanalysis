@@ -293,8 +293,8 @@ export default function Dashboard() {
                             </div>
                             {analysisResults && (
                                 <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-purple-500" />
-                                    <span className="text-sm text-gray-400">
+                                    <div className="w-3 h-3 rounded-full bg-sky-500" />
+                                    <span className="text-sm text-neutral-400">
                                         {analysisResults.significantCorrelations.length} significant correlations found
                                     </span>
                                 </div>
@@ -342,18 +342,19 @@ export default function Dashboard() {
                     </div>
 
                     {/* Tabs */}
-                    <div className="flex gap-1 bg-[#111] p-1 rounded-lg w-fit">
+                    <div className="flex gap-1 bg-[#171717] p-1 rounded-lg w-fit" style={{ boxShadow: 'inset 3px 3px 6px #080808, inset -3px -3px 6px #1a1a1a' }}>
                         {(['overview', 'heatmap', 'insights', 'ml'] as Tab[]).map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`
-                  px-4 py-2 rounded-md text-sm font-medium transition-colors
+                  px-4 py-2 rounded-md text-sm font-medium transition-all duration-150
                   ${activeTab === tab
-                                        ? 'bg-primary-600 text-white'
-                                        : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
+                                        ? 'bg-sky-600 text-white'
+                                        : 'text-neutral-400 hover:text-white hover:bg-[#1f1f1f]'
                                     }
                 `}
+                                style={activeTab === tab ? { boxShadow: '3px 3px 6px #080808, -3px -3px 6px #1a1a1a' } : {}}
                             >
                                 {tab === 'ml' ? '🧠 ML Insights' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                             </button>

@@ -152,14 +152,14 @@ export default function MLInsights({ alignedData, isLoading = false }: MLInsight
     return (
         <div className="space-y-6">
             {/* Summary Card */}
-            <div className="card p-6 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30">
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <div className="card p-6 bg-[#1a1a1a] border-sky-500/30">
+                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
                     🧠 ML Analysis Summary
                 </h3>
-                <p className="text-gray-300 mb-4">{mlResults.summary}</p>
+                <p className="text-neutral-300 mb-4">{mlResults.summary}</p>
                 <div className="flex flex-wrap gap-2">
                     {mlResults.recommendations.map((rec, i) => (
-                        <div key={i} className="bg-[#111] px-3 py-2 rounded-lg text-sm text-gray-300">
+                        <div key={i} className="bg-[#0d0d0d] px-3 py-2 rounded-lg text-sm text-neutral-300" style={{ boxShadow: 'inset 2px 2px 4px #080808, inset -2px -2px 4px #1a1a1a' }}>
                             💡 {rec}
                         </div>
                     ))}
@@ -167,7 +167,7 @@ export default function MLInsights({ alignedData, isLoading = false }: MLInsight
             </div>
 
             {/* Section Tabs */}
-            <div className="flex gap-1 bg-[#111] p-1 rounded-lg w-fit">
+            <div className="flex gap-1 bg-[#171717] p-1 rounded-lg w-fit" style={{ boxShadow: 'inset 3px 3px 6px #080808, inset -3px -3px 6px #1a1a1a' }}>
                 {[
                     { key: 'interactions', label: '🔗 Interactions', count: mlResults.interactions.length },
                     { key: 'importance', label: '📊 Importance', count: mlResults.featureImportance.topMedications.length },
@@ -177,10 +177,11 @@ export default function MLInsights({ alignedData, isLoading = false }: MLInsight
                     <button
                         key={key}
                         onClick={() => setActiveSection(key as typeof activeSection)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === key
-                                ? 'bg-purple-600 text-white'
-                                : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-150 ${activeSection === key
+                            ? 'bg-sky-600 text-white'
+                            : 'text-neutral-400 hover:text-white hover:bg-[#1f1f1f]'
                             }`}
+                        style={activeSection === key ? { boxShadow: '3px 3px 6px #080808, -3px -3px 6px #1a1a1a' } : {}}
                     >
                         {label} ({count})
                     </button>
@@ -229,10 +230,10 @@ function InteractionsSection({ interactions }: { interactions: MLInteractionResu
                 <div
                     key={i}
                     className={`card p-4 border-l-4 ${interaction.interactionType === 'synergistic'
-                            ? 'border-l-green-500'
-                            : interaction.interactionType === 'antagonistic'
-                                ? 'border-l-red-500'
-                                : 'border-l-gray-500'
+                        ? 'border-l-green-500'
+                        : interaction.interactionType === 'antagonistic'
+                            ? 'border-l-red-500'
+                            : 'border-l-gray-500'
                         }`}
                 >
                     <div className="flex items-center justify-between mb-2">
@@ -241,10 +242,10 @@ function InteractionsSection({ interactions }: { interactions: MLInteractionResu
                                 {interaction.medications.join(' + ')}
                             </span>
                             <span className={`text-xs px-2 py-0.5 rounded ${interaction.interactionType === 'synergistic'
-                                    ? 'bg-green-500/20 text-green-400'
-                                    : interaction.interactionType === 'antagonistic'
-                                        ? 'bg-red-500/20 text-red-400'
-                                        : 'bg-gray-500/20 text-gray-400'
+                                ? 'bg-green-500/20 text-green-400'
+                                : interaction.interactionType === 'antagonistic'
+                                    ? 'bg-red-500/20 text-red-400'
+                                    : 'bg-gray-500/20 text-gray-400'
                                 }`}>
                                 {interaction.interactionType}
                             </span>
@@ -279,12 +280,12 @@ function ImportanceSection({ importance }: { importance: FeatureImportanceResult
         <div className="space-y-6">
             {/* Top Medications Overall */}
             <div className="card p-4">
-                <h4 className="font-semibold mb-3">Most Impactful Medications (Overall)</h4>
+                <h4 className="font-bold mb-3">Most Impactful Medications (Overall)</h4>
                 <div className="flex flex-wrap gap-2">
                     {importance.topMedications.map((med, i) => (
                         <span
                             key={med}
-                            className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-sm"
+                            className="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 text-sm"
                         >
                             #{i + 1} {med}
                         </span>
@@ -314,10 +315,10 @@ function ImportanceSection({ importance }: { importance: FeatureImportanceResult
                                     <div className="flex-1 bg-[#111] rounded-full h-3 overflow-hidden">
                                         <div
                                             className={`h-full ${item.direction === 'positive'
-                                                    ? 'bg-green-500'
-                                                    : item.direction === 'negative'
-                                                        ? 'bg-red-500'
-                                                        : 'bg-gray-500'
+                                                ? 'bg-green-500'
+                                                : item.direction === 'negative'
+                                                    ? 'bg-red-500'
+                                                    : 'bg-gray-500'
                                                 }`}
                                             style={{ width: `${Math.min(100, item.importance * 100)}%` }}
                                         />
@@ -412,10 +413,10 @@ function ClustersSection({ clusters }: { clusters: ClusterResult }) {
     return (
         <div className="space-y-4">
             {/* Recommendation */}
-            <div className="card p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/30">
-                <div className="font-semibold mb-1">💡 Recommendation</div>
-                <p className="text-gray-300">{clusters.recommendation}</p>
-                <div className="text-xs text-gray-500 mt-2">
+            <div className="card p-4 bg-[#1a1a1a] border-sky-500/30">
+                <div className="font-bold mb-1">💡 Recommendation</div>
+                <p className="text-neutral-300">{clusters.recommendation}</p>
+                <div className="text-xs text-neutral-500 mt-2">
                     Clustering silhouette score: {(clusters.silhouetteScore * 100).toFixed(0)}%
                 </div>
             </div>
@@ -426,8 +427,8 @@ function ClustersSection({ clusters }: { clusters: ClusterResult }) {
                     <div
                         key={cluster.id}
                         className={`card p-4 ${cluster.id === clusters.optimalCluster
-                                ? 'border-2 border-green-500/50 bg-green-500/5'
-                                : ''
+                            ? 'border-2 border-green-500/50 bg-green-500/5'
+                            : ''
                             }`}
                     >
                         <div className="flex items-center justify-between mb-2">
