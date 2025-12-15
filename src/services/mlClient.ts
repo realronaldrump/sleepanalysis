@@ -19,9 +19,7 @@ import { AlignedDataPoint } from '@/types/analysis';
 import { ProcessedSleepMetrics, SleepMetricKey } from '@/types/oura';
 
 // ML service URL - defaults to local development
-// ML service URL - defaults to local development port 8000, or /api/ml in production
-const ML_SERVICE_URL = process.env.NEXT_PUBLIC_ML_SERVICE_URL ||
-    (process.env.NODE_ENV === 'production' ? '/api/ml' : 'http://localhost:8000');
+const ML_SERVICE_URL = process.env.NEXT_PUBLIC_ML_SERVICE_URL || 'http://localhost:8000';
 
 /**
  * Convert snake_case keys to camelCase recursively
