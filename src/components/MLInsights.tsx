@@ -369,6 +369,11 @@ function CausalSection({ results }: { results: CausalResult[] }) {
                                     CI: [{result.confidenceInterval[0].toFixed(2)}, {result.confidenceInterval[1].toFixed(2)}]
                                     | p = {result.pValue.toFixed(3)}
                                 </div>
+                                {result.conditionalInsight && (
+                                    <div className="mt-2 text-xs text-sky-400 bg-sky-950/30 p-2 rounded border border-sky-500/20">
+                                        💡 {result.conditionalInsight}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

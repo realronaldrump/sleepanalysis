@@ -10,3 +10,4 @@ xgboost>=2.0.0
 statsmodels>=0.14.0
 shap>=0.44.0
 python-multipart>=0.0.9
+econml>=0.14.0

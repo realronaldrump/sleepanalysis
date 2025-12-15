@@ -142,6 +142,7 @@ class CausalResult(BaseModel):
     p_value: float
     refutation_passed: bool
     method: str
+    conditional_insight: Optional[str] = None
 
 
 class ClusterProfile(BaseModel):

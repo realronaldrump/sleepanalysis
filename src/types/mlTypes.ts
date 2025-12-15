@@ -71,6 +71,7 @@ export interface CausalResult {
     pValue: number;
     refutationPassed: boolean;
     method: string;
+    conditionalInsight?: string;
 }
 
 /**
@@ -124,6 +125,7 @@ export interface MLAlignedDataPoint {
         taken: boolean;
         total_mg: number;
         quantity: number;
+        doses?: Array<{ mg: number; time: string }>;
     }>;
     sleep_metrics: Record<string, number | null>;
 }

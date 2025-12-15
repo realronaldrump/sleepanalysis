@@ -72,13 +72,35 @@ export async function checkMLServiceHealth(): Promise<MLHealthResponse | null> {
  */
 function convertAlignedData(data: AlignedDataPoint[]): MLAlignedDataPoint[] {
     return data.map(point => {
-        const medications: Record<string, { taken: boolean; total_mg: number; quantity: number }> = {};
+        const medications: Record<string, {
+            taken: boolean;
+            total_mg: number;
+            quantity: number;
+            doses?: Array<{ mg: number; time: string }>;
+        }> = {};
 
         point.medications.forEach((value, key) => {
+            // Find specific doses if detailed summary is available
+            const doses: Array<{ mg: number; time: string }> = [];
+
+            if (point.medicationSummary?.entries) {
+                const matchingEntries = point.medicationSummary.entries.filter(
+                    e => e.normalizedName === key || e.name === key
+                );
+
+                matchingEntries.forEach(entry => {
+                    doses.push({
+                        mg: entry.dosageMg,
+                        time: entry.time
+                    });
+                });
+            }
+
             medications[key] = {
                 taken: value.taken,
                 total_mg: value.totalMg,
-                quantity: value.quantity
+                quantity: value.quantity,
+                doses: doses.length > 0 ? doses : undefined
             };
         });
 
