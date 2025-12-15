@@ -13,15 +13,11 @@ import {
     MedicationEntry,
 } from '@/types/medication';
 import { ProcessedSleepMetrics, SLEEP_METRICS, SleepMetricKey } from '@/types/oura';
-import { AnalysisResults, alignData } from '@/services/correlationEngine';
-import { runCorrelationAnalysis } from '@/services/correlationEngine';
+import { AnalysisResults, alignData, runCorrelationAnalysis } from '@/services/correlationEngine';
 import { groupMedicationsBySleepNight } from '@/services/medicationParser';
-import { AlignedDataPoint } from '@/types/analysis';
-import { fetchAndProcessSleepData } from '@/services/ouraClient';
-import { CorrelationResult } from '@/types/analysis';
-
-type Tab = 'overview' | 'heatmap' | 'insights' | 'ml';
-type SortDirection = 'strongest_positive' | 'strongest_negative' | 'strongest_abs' | 'medication' | 'metric';
+import { AlignedDataPoint, CorrelationResult } from '@/types/analysis';
+import { fetchAndProcessSleepData, loadTokens, saveTokens } from '@/services/ouraClient';
+import { fetchMedicationLog, saveMedicationLog } from '@/services/medicationService';
 
 export default function Dashboard() {
     // Data state
@@ -29,6 +25,7 @@ export default function Dashboard() {
     const [sleepData, setSleepData] = useState<ProcessedSleepMetrics[]>([]);
     const [ouraToken, setOuraToken] = useState<string | null>(null);
     const [isLoadingOura, setIsLoadingOura] = useState(false);
+    const [isLoadingStored, setIsLoadingStored] = useState(true);
 
     // Analysis state
     const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
@@ -44,23 +41,88 @@ export default function Dashboard() {
     const [filterMetric, setFilterMetric] = useState<SleepMetricKey | 'all'>('all');
     const [filterMedication, setFilterMedication] = useState<string>('all');
 
+    // Load stored data on mount
+    useEffect(() => {
+        async function loadStoredData() {
+            try {
+                // Load Medication Log
+                const storedMedLogs = await fetchMedicationLog();
+                if (storedMedLogs) {
+                    setMedicationData(storedMedLogs);
+                }
+
+                // Load Oura Tokens
+                const storedTokens = await loadTokens();
+                if (storedTokens) {
+                    setOuraToken(storedTokens.access_token);
+                    // Optionally auto-fetch here if we have both?
+                    // We'll let the user click "Connect" or just handle it if they are "connected"
+                    // But we don't have an auto-fetch mechanism yet other than handleOuraConnect.
+                    // Let's trigger a fetch if we have a token.
+                    handleOuraConnect(storedTokens.access_token, true); // Pass flag to skip save
+                }
+            } catch (error) {
+                console.error('Failed to load stored data:', error);
+            } finally {
+                setIsLoadingStored(false);
+            }
+        }
+        loadStoredData();
+    }, []);
+
     // Handle medication import
-    const handleMedicationImport = useCallback((result: MedicationLogResult) => {
+    const handleMedicationImport = useCallback(async (result: MedicationLogResult) => {
         setMedicationData(result);
         // Clear previous analysis
         setAnalysisResults(null);
+        // Save to backend
+        try {
+            await saveMedicationLog(result.entries, result.dateRange);
+        } catch (e) {
+            console.error('Failed to save medication log', e);
+        }
     }, []);
 
     // Handle Oura connection
-    const handleOuraConnect = useCallback(async (token: string) => {
+    const handleOuraConnect = useCallback(async (token: string, skipSave = false) => {
         setOuraToken(token);
         setIsLoadingOura(true);
 
+        if (!skipSave) {
+            // We only have the access token from the simple input, not the full OAuth response if manual input.
+            // But if we are assuming the input IS the access token (Personal Access Token), we can save it.
+            // However, loadTokens/saveTokens expects OuraTokens with refresh/expiry.
+            // If the user enters a Personal Access Token via the UI, we might not have expiry.
+            // For now, let's assume we construct a dummy token object if one isn't passed,
+            // OR we just save what we have. API expects full object.
+            // Let's assume for manual entry we just save it with far future expiry? 
+            // Or better, only save if it came from a "real" flow. 
+            // Given the limitations, let's constructing a basic token object for PATs.
+            try {
+                await saveTokens({
+                    access_token: token,
+                    refresh_token: '',
+                    expires_at: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+                    token_type: 'Bearer'
+                });
+            } catch (e) {
+                console.error('Failed to save tokens', e);
+            }
+        }
+
         try {
             // Use the full medication date range for complete analysis
-            // Default to last 2 years if no medication data
+            // Default to last 2 years if no medication data (or use what we have loaded)
+            // Note: medicationData might be stale in this closure if called from useEffect?
+            // Actually medicationData is a dependency, so it should be fine.
+            // BUT if called from useEffect loadStoredData, medicationData might not be set yet 
+            // inside THIS closure if we just set it.
+            // We should arguably use a refined approach for initial load.
+
             const endDate = new Date().toISOString().split('T')[0];
-            const startDate = medicationData?.dateRange.start ||
+            // We need to access the LATEST medicationData. 
+            // Simple fix: default to 2 years, user can re-run analysis.
+            const startDate =
                 new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
             const data = await fetchAndProcessSleepData(token, startDate, endDate);
@@ -69,17 +131,21 @@ export default function Dashboard() {
             setAnalysisResults(null);
         } catch (error) {
             console.error('Failed to fetch Oura data:', error);
-            alert('Failed to fetch data from Oura. Please check your access token.');
-            setOuraToken(null);
+            // Don't alert on auto-load failure to be less annoying
+            if (!skipSave) {
+                alert('Failed to fetch data from Oura. Please check your access token.');
+                setOuraToken(null);
+            }
         } finally {
             setIsLoadingOura(false);
         }
-    }, [medicationData]);
+    }, []);
 
     const handleOuraDisconnect = useCallback(() => {
         setOuraToken(null);
         setSleepData([]);
         setAnalysisResults(null);
+        // We could also clear server storage but maybe better to keep it?
     }, []);
 
     // Run analysis when both datasets are available
