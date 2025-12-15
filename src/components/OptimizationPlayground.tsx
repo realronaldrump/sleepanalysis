@@ -34,12 +34,13 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
         const doses: Record<string, Set<number>> = {};
 
         alignedData.forEach(d => {
-            Object.entries(d.medications).forEach(([key, val]) => {
+            // d.medications is a Map
+            d.medications.forEach((val, key) => {
                 meds.add(key);
                 if (!doses[key]) doses[key] = new Set();
                 // Round to reasonable precision to avoid float noise
-                if (val.total_mg > 0) {
-                    doses[key].add(Math.round(val.total_mg * 10) / 10);
+                if (val.totalMg > 0) {
+                    doses[key].add(Math.round(val.totalMg * 10) / 10);
                 }
             });
         });
@@ -58,7 +59,7 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
         // Default configs: Top 3 meds
         const counts: Record<string, number> = {};
         alignedData.forEach(d => {
-            Object.keys(d.medications).forEach(key => {
+            d.medications.forEach((val, key) => {
                 counts[key] = (counts[key] || 0) + 1;
             });
         });
@@ -193,8 +194,8 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
 
                             return (
                                 <div key={config.name} className={`p-4 rounded-lg border transition-all relative group ${config.enabled
-                                        ? 'bg-[#222] border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.1)]'
-                                        : 'bg-[#151515] border-transparent opacity-70'
+                                    ? 'bg-[#222] border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.1)]'
+                                    : 'bg-[#151515] border-transparent opacity-70'
                                     }`}>
                                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => removeMedication(idx)} className="text-gray-500 hover:text-red-400">×</button>
