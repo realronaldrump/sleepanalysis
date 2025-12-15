@@ -23,6 +23,7 @@ from models.schemas import (
     OptimizationResult,
     SimulationRequest,
     SimulationResult,
+    PredictionDetail,
 )
 from services.interaction_detector import detect_interactions, get_feature_importance
 from services.time_series import forecast_sleep_metric
@@ -225,8 +226,8 @@ async def analyze_optimize(request: AnalysisRequest):
     try:
         logger.info(f"Optimizing for {len(request.aligned_data)} historical points")
         
-        # Train on the fly for now (optimize later)
-        success = optimizer_instance.train(request.aligned_data, request.target_metrics[0] if request.target_metrics else "sleepScore")
+        # Train on the fly for all metrics
+        success = optimizer_instance.prepare_data_and_train(request.aligned_data)
         
         if not success:
             raise HTTPException(status_code=400, detail="Insufficient data for optimization")
@@ -245,20 +246,11 @@ async def analyze_optimize(request: AnalysisRequest):
 @app.post("/analyze/simulate", response_model=SimulationResult)
 async def analyze_simulate(request: SimulationRequest):
     """
-    Simulate a specific configuration.
-    Note: Requires model to be trained already (call /analyze/optimize first or ensure persistence).
-    For now, we assume the singleton state is preserved or we might need to pass history again (inefficient).
-    Actually, to be stateless, we should pass history or use a stored model.
-    Given the current architecture, let's assume the frontend calls 'optimize' first which populates the cache.
+    Simulate a specific configuration across ALL metrics.
     """
     try:
-        pred, std, percentile = optimizer_instance.simulate_configuration(request.medications)
-        
-        return SimulationResult(
-            predicted_value=round(pred, 1),
-            confidence_interval=(round(pred - 1.96 * std, 1), round(pred + 1.96 * std, 1)),
-            percentile=round(percentile, 2)
-        )
+        result = optimizer_instance.simulate_configuration(request.medications)
+        return result
         
     except Exception as e:
         logger.error(f"Simulation failed: {e}")

@@ -201,10 +201,17 @@ export interface SimulationRequest {
 }
 
 /**
- * Result of simulation
+ * Detailed prediction for a single metric
  */
-export interface SimulationResult {
+export interface PredictionDetail {
     predictedValue: number;
     confidenceInterval: [number, number];
     percentile: number;
+}
+
+/**
+ * Result of simulation
+ */
+export interface SimulationResult {
+    predictions: Record<SleepMetricKey, PredictionDetail>;
 }

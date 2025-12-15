@@ -199,11 +199,17 @@ class OptimizationResult(BaseModel):
 class SimulationRequest(BaseModel):
     """Request to simulate a specific configuration."""
     medications: list[MedicationData]
-    target_metric: SleepMetricKey = SleepMetricKey.SLEEP_SCORE
+    # No single target metric, simulate for all available models
+
+
+class PredictionDetail(BaseModel):
+    """Detailed prediction for a single metric."""
+    predicted_value: float
+    confidence_interval: tuple[float, float]
+    percentile: float
 
 
 class SimulationResult(BaseModel):
     """Result of a simulation."""
-    predicted_value: float
-    confidence_interval: tuple[float, float]
-    percentile: float  # How this compares to history
+    # Map from metric key to prediction detail
+    predictions: dict[SleepMetricKey, PredictionDetail]
