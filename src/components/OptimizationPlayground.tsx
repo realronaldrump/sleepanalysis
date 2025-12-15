@@ -25,24 +25,40 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
     const [result, setResult] = useState<SimulationResult | null>(null);
     const [isSimulating, setIsSimulating] = useState(false);
     const [availableMeds, setAvailableMeds] = useState<string[]>([]);
+    const [availableDoses, setAvailableDoses] = useState<Record<string, number[]>>({});
     const [selectedMedToAdd, setSelectedMedToAdd] = useState('');
 
     // Initialize data
     useEffect(() => {
         const meds = new Set<string>();
+        const doses: Record<string, Set<number>> = {};
+
         alignedData.forEach(d => {
-            d.medications.forEach((val, key) => {
+            Object.entries(d.medications).forEach(([key, val]) => {
                 meds.add(key);
+                if (!doses[key]) doses[key] = new Set();
+                // Round to reasonable precision to avoid float noise
+                if (val.total_mg > 0) {
+                    doses[key].add(Math.round(val.total_mg * 10) / 10);
+                }
             });
         });
+
         const sortedMeds = Array.from(meds).sort();
         setAvailableMeds(sortedMeds);
 
+        const doseMap: Record<string, number[]> = {};
+        Object.keys(doses).forEach(key => {
+            doseMap[key] = Array.from(doses[key]).sort((a, b) => a - b);
+            // Ensure at least one default dose if empty (e.g. 0 was filtered out or data missing)
+            if (doseMap[key].length === 0) doseMap[key] = [5];
+        });
+        setAvailableDoses(doseMap);
+
         // Default configs: Top 3 meds
-        // ... (Logic to pick top 3) or just empty? Let's pick top 3.
         const counts: Record<string, number> = {};
         alignedData.forEach(d => {
-            d.medications.forEach((val, key) => {
+            Object.keys(d.medications).forEach(key => {
                 counts[key] = (counts[key] || 0) + 1;
             });
         });
@@ -51,12 +67,17 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
             .slice(0, 3)
             .map(([name]) => name);
 
-        const initialConfigs = topMeds.map(name => ({
-            name,
-            dose: 5, // Default placeholder
-            time: 600, // 10 PM
-            enabled: false
-        }));
+        const initialConfigs = topMeds.map(name => {
+            // Default to most common dose could be better, but median is fine
+            const medDoses = doseMap[name] || [5];
+            const defaultDose = medDoses[Math.floor(medDoses.length / 2)] || 5;
+            return {
+                name,
+                dose: defaultDose,
+                time: 600, // 10 PM
+                enabled: false
+            };
+        });
         setConfigs(initialConfigs);
     }, [alignedData]);
 
@@ -64,8 +85,6 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
     // Debounced simulation
     useEffect(() => {
         const timer = setTimeout(async () => {
-            // Always simulate even if empty to get baseline? 
-            // Or arguably if no meds, it's just baseline prediction.
             setIsSimulating(true);
             try {
                 const activeConfigs = configs.filter(c => c.enabled);
@@ -98,9 +117,12 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
 
     const addMedication = () => {
         if (!selectedMedToAdd || configs.some(c => c.name === selectedMedToAdd)) return;
+        const medDoses = availableDoses[selectedMedToAdd] || [5];
+        const defaultDose = medDoses[Math.floor(medDoses.length / 2)];
+
         setConfigs([...configs, {
             name: selectedMedToAdd,
-            dose: 5,
+            dose: defaultDose,
             time: 600,
             enabled: true
         }]);
@@ -162,68 +184,79 @@ export default function OptimizationPlayground({ alignedData, recommendations }:
                     </div>
 
                     <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                        {configs.map((config, idx) => (
-                            <div key={config.name} className={`p-4 rounded-lg border transition-all relative group ${config.enabled
-                                ? 'bg-[#222] border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.1)]'
-                                : 'bg-[#151515] border-transparent opacity-70'
-                                }`}>
-                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => removeMedication(idx)} className="text-gray-500 hover:text-red-400">×</button>
-                                </div>
+                        {configs.map((config, idx) => {
+                            const medDoses = availableDoses[config.name] || [0, 5, 10]; // Fallback
+                            const isDiscrete = medDoses.length < 15;
+                            const marks = isDiscrete
+                                ? medDoses.reduce((acc, d) => ({ ...acc, [d]: `${d}mg` }), {})
+                                : undefined;
 
-                                <div className="flex items-center justify-between mb-4 pr-6">
-                                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                                        <input
-                                            type="checkbox"
-                                            checked={config.enabled}
-                                            onChange={(e) => handleConfigChange(idx, { enabled: e.target.checked })}
-                                            className="rounded border-gray-600 bg-black text-sky-500 focus:ring-sky-500"
-                                        />
-                                        <span className={`font-semibold ${config.enabled ? 'text-white' : 'text-gray-400'}`}>
-                                            {config.name}
-                                        </span>
-                                    </label>
-                                </div>
-
-                                {config.enabled && (
-                                    <div className="space-y-4 px-2">
-                                        <div>
-                                            <div className="flex justify-between text-xs text-gray-400 mb-2">
-                                                <span>Dose (mg)</span>
-                                                <span className="text-white font-mono">{config.dose} mg</span>
-                                            </div>
-                                            <Slider
-                                                min={0}
-                                                max={500}
-                                                step={1}
-                                                value={config.dose}
-                                                onChange={(val) => handleConfigChange(idx, { dose: val as number })}
-                                                trackStyle={{ backgroundColor: '#0ea5e9' }}
-                                                handleStyle={{ borderColor: '#0ea5e9', backgroundColor: '#000' }}
-                                                railStyle={{ backgroundColor: '#333' }}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <div className="flex justify-between text-xs text-gray-400 mb-2">
-                                                <span>Time</span>
-                                                <span className="text-white font-mono">{formatTimeDisplay(config.time)}</span>
-                                            </div>
-                                            <Slider
-                                                min={360}
-                                                max={960}
-                                                step={15}
-                                                value={config.time}
-                                                onChange={(val) => handleConfigChange(idx, { time: val as number })}
-                                                trackStyle={{ backgroundColor: '#a855f7' }}
-                                                handleStyle={{ borderColor: '#a855f7', backgroundColor: '#000' }}
-                                                railStyle={{ backgroundColor: '#333' }}
-                                            />
-                                        </div>
+                            return (
+                                <div key={config.name} className={`p-4 rounded-lg border transition-all relative group ${config.enabled
+                                        ? 'bg-[#222] border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.1)]'
+                                        : 'bg-[#151515] border-transparent opacity-70'
+                                    }`}>
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => removeMedication(idx)} className="text-gray-500 hover:text-red-400">×</button>
                                     </div>
-                                )}
-                            </div>
-                        ))}
+
+                                    <div className="flex items-center justify-between mb-4 pr-6">
+                                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                                            <input
+                                                type="checkbox"
+                                                checked={config.enabled}
+                                                onChange={(e) => handleConfigChange(idx, { enabled: e.target.checked })}
+                                                className="rounded border-gray-600 bg-black text-sky-500 focus:ring-sky-500"
+                                            />
+                                            <span className={`font-semibold ${config.enabled ? 'text-white' : 'text-gray-400'}`}>
+                                                {config.name}
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    {config.enabled && (
+                                        <div className="space-y-4 px-2">
+                                            <div>
+                                                <div className="flex justify-between text-xs text-gray-400 mb-2">
+                                                    <span>Dose</span>
+                                                    <span className="text-white font-mono">{config.dose} mg</span>
+                                                </div>
+                                                <Slider
+                                                    min={Math.min(...medDoses)}
+                                                    max={Math.max(...medDoses)}
+                                                    step={isDiscrete ? null : 1} // Null step forces snapping to marks
+                                                    marks={marks}
+                                                    value={config.dose}
+                                                    onChange={(val) => handleConfigChange(idx, { dose: val as number })}
+                                                    trackStyle={{ backgroundColor: '#0ea5e9' }}
+                                                    handleStyle={{ borderColor: '#0ea5e9', backgroundColor: '#000' }}
+                                                    railStyle={{ backgroundColor: '#333' }}
+                                                    dotStyle={{ borderColor: '#333', backgroundColor: '#111' }}
+                                                    activeDotStyle={{ borderColor: '#0ea5e9', backgroundColor: '#0ea5e9' }}
+                                                />
+                                            </div>
+
+                                            <div className="mt-6">
+                                                <div className="flex justify-between text-xs text-gray-400 mb-2">
+                                                    <span>Time</span>
+                                                    <span className="text-white font-mono">{formatTimeDisplay(config.time)}</span>
+                                                </div>
+                                                <Slider
+                                                    min={360}
+                                                    max={960}
+                                                    step={15}
+                                                    value={config.time}
+                                                    onChange={(val) => handleConfigChange(idx, { time: val as number })}
+                                                    trackStyle={{ backgroundColor: '#a855f7' }}
+                                                    handleStyle={{ borderColor: '#a855f7', backgroundColor: '#000' }}
+                                                    railStyle={{ backgroundColor: '#333' }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
                         {configs.length === 0 && (
                             <div className="text-center py-8 text-gray-600 border border-dashed border-gray-800 rounded-lg">
                                 No medications selected. Add one to start.

@@ -22,7 +22,7 @@ export function OuraConnect({
     sleepNightsCount,
 }: OuraConnectProps) {
     const [showTokenInput, setShowTokenInput] = useState(false);
-    const [token, setToken] = useState('');
+    const [token, setToken] = useState('UVC3U4BLQLOZ5HUTTKKMBBMP6QJ6TOTZ');
     const [error, setError] = useState<string | null>(null);
 
     const handleConnect = () => {
