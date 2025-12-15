@@ -89,3 +89,7 @@ data/
 *.sqlite
 *.db
 *.log
+ml-service/catboost_info/learn_error.tsv
+ml-service/catboost_info/catboost_training.json
+ml-service/catboost_info/time_left.tsv
+ml-service/catboost_info/learn/events.out.tfevents
