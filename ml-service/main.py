@@ -17,13 +17,12 @@ from models.schemas import (
     ClusterResult,
     ComprehensiveResult,
     HealthResponse,
-    ComprehensiveResult,
-    HealthResponse,
     SleepMetricKey,
     OptimizationResult,
     SimulationRequest,
     SimulationResult,
     PredictionDetail,
+    MultiObjectiveResult,
 )
 from services.interaction_detector import detect_interactions, get_feature_importance
 from services.time_series import forecast_sleep_metric
@@ -254,6 +253,37 @@ async def analyze_simulate(request: SimulationRequest):
         
     except Exception as e:
         logger.error(f"Simulation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze/optimize-multi", response_model=MultiObjectiveResult)
+async def analyze_optimize_multi(request: AnalysisRequest):
+    """
+    Multi-objective optimization using NSGA-II.
+    
+    Returns a Pareto frontier of optimal trade-offs between:
+    - Maximizing deep sleep
+    - Maximizing REM sleep  
+    - Minimizing sleep latency
+    """
+    try:
+        logger.info(f"Multi-objective optimization for {len(request.aligned_data)} data points")
+        
+        success = optimizer_instance.prepare_data_and_train(request.aligned_data)
+        
+        if not success:
+            return MultiObjectiveResult(
+                pareto_frontier=[],
+                objective_names=[],
+                recommendation="Insufficient data for optimization (need 10+ nights)"
+            )
+        
+        result = optimizer_instance.optimize_multi_objective()
+        logger.info(f"Found {len(result.pareto_frontier)} Pareto-optimal solutions")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Multi-objective optimization failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

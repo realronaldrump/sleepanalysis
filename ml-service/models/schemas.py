@@ -213,3 +213,18 @@ class SimulationResult(BaseModel):
     """Result of a simulation."""
     # Map from metric key to prediction detail
     predictions: dict[SleepMetricKey, PredictionDetail]
+
+
+class ParetoSolution(BaseModel):
+    """A single solution on the Pareto frontier."""
+    medications: list[OptimizationSuggestion]
+    objectives: dict[str, float]  # metric -> predicted value
+    trade_off_description: str
+
+
+class MultiObjectiveResult(BaseModel):
+    """Result of multi-objective optimization using NSGA-II."""
+    pareto_frontier: list[ParetoSolution]
+    objective_names: list[str]
+    recommendation: str
+

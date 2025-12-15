@@ -215,3 +215,22 @@ export interface PredictionDetail {
 export interface SimulationResult {
     predictions: Record<SleepMetricKey, PredictionDetail>;
 }
+
+/**
+ * A single solution on the Pareto frontier
+ */
+export interface ParetoSolution {
+    medications: OptimizationSuggestion[];
+    objectives: Record<string, number>;  // metric -> predicted value
+    tradeOffDescription: string;
+}
+
+/**
+ * Result of multi-objective optimization using NSGA-II
+ */
+export interface MultiObjectiveResult {
+    paretoFrontier: ParetoSolution[];
+    objectiveNames: string[];
+    recommendation: string;
+}
+
